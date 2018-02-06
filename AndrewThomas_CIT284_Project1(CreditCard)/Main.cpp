@@ -14,6 +14,7 @@ Change Log:
 				- Wrote acctNumber generator
 				- Overloaded Stream Insertion Operator [NOT WORKING]
 			2/6 - Fixed Overloaded stream insert Operator - call was not dereferenced
+				- Started VERIFY flag handling
 */
 
 #include <iostream>
@@ -71,7 +72,7 @@ public: CreditCard(string symbol) {
 	
 
 }
-public: CreditCard(char* acctNum, char* amount) {
+public: CreditCard(string acctNum, float amount) {
 	/*
 	TODO:
 	***Search file for account number***
@@ -134,9 +135,9 @@ int main(int argc, char** argv) {
 	}
 
 	if (argc == 3) {
-		string arg1 = *(argv + 1);
-		if (arg1.compare("CREATE") == 0) {
-			string symbol = *(argv + 2);
+		string flag = strupr(*(argv + 1));
+		if (flag.compare("CREATE") == 0) {
+			string symbol = strupr(*(argv + 2));
 			CreditCard* cc = new CreditCard(symbol);
 			cout << *cc;
 		}
@@ -146,12 +147,16 @@ int main(int argc, char** argv) {
 	}
 
 	if (argc == 4) {
-		// TODO - Code verification function
-		string arg1 = *(argv + 1);
-		if (arg1.compare("VERIFICATION") == 0) {
-			string symbol = *(argv + 2);
-			CreditCard* cc = new CreditCard(symbol);
-			cout << *cc;
+		string accountNumber = strupr(*(argv + 1));
+		if (accountNumber.compare("VERIFICATION") == 0) {
+			float amount;
+			try {
+				amount = atof(*(argv + 2));
+			}
+			catch(...){
+				//TODO - ERROR
+			}
+			CreditCard *cc = new CreditCard(accountNumber, amount);
 		}
 	}
 
