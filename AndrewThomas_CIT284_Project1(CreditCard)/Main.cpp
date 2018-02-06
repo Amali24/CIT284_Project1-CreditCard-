@@ -12,9 +12,13 @@ Change Log:
 				- Added skeleton of other arg counts wih TODOs
 				- Created CreditCard class with TODOs
 				- Wrote acctNumber generator
-				- Overloaded Stream Insertion Operator [NOT WORKING]
+				- Overloaded Stream Insertion Operator [not working]
 			2/6 - Fixed Overloaded stream insert Operator - call was not dereferenced
-				- Started VERIFY flag handling
+				- Started VERIFY flag handling [untested]
+				- Started File Handling [untested]
+				- Added and then removed strupr calls for case insensitivity - need a different method for this
+				- Started overloaded extraction operator for reading from file [unfinished]
+				- Fixed off-by-one error in generating card number (card numbers were 17 digits)
 */
 
 #include <iostream>
@@ -22,12 +26,10 @@ Change Log:
 #include <cstdlib>
 #include <ctime>
 #include <string>
+#include <fstream>
+#include <sstream>
 
-using std::cout;
-using std::endl;
-using std::string;
-using std::to_string;
-using std::ostream;
+using namespace std;
 
 class CreditCard {
 private: string accountNumber;
@@ -72,7 +74,7 @@ public: CreditCard(string symbol) {
 	
 
 }
-public: CreditCard(string acctNum, float amount) {
+public: CreditCard(string acctNum, double amount, string fileName) {
 	/*
 	TODO:
 	***Search file for account number***
@@ -81,12 +83,17 @@ public: CreditCard(string acctNum, float amount) {
 	If not enough credit, display "AUTHORIZATION DENIED"
 	If not, display "ACCOUNT NOT ON FILE"
 	*/
+	ifstream inFile;
+	inFile.open(fileName);
+	inFile >> *this;
+
+
 }
 
 private: string generateCardNumber(int firstDigit) {
 	string cardNumber = "";
 	cardNumber += to_string(firstDigit);
-	for (int i = 0; i <= 14; i++) {
+	for (int i = 0; i < 14; i++) {
 		cardNumber += to_string(rand()%10);
 	}
 	string secondFour = cardNumber.substr(4, 4);
@@ -107,18 +114,37 @@ public: string getAccountNumber() {
 }
 
 	friend ostream &operator << (ostream &out, const CreditCard& cc) {
-		out << "Account number: " << cc.accountNumber << endl
-			<< "Available Credit: " << cc.availableCredit << endl
-			<< "Credit Limit: " << cc.maxCredit << endl;
+		out << cc.accountNumber << " " << cc.availableCredit << " " << cc.maxCredit << endl;
 		
 		return out;
 }
+	friend istream &operator >> (istream &in, const CreditCard& cc) {
+		string line;
+		while (getline(in, line)) {
+			if (line.find(cc.accountNumber) != string::npos) {
+				stringstream linestream;
+
+				linestream << line;
+				string accountNumber;
+				string availableCredit;
+				string maxCredit;
+				linestream >> accountNumber >> availableCredit >> maxCredit;
+				cc.accountNumber = accountNumber;
+				cc.availableCredit = stof(availableCredit);
+				cc.maxCredit = stof(maxCredit);
+				return in;
+			}
+		}
+		cout << "ACCOUNT NOT FOUND";
+		return in;
+	}
 
 
 };
 
 int main(int argc, char** argv) {
-	srand(time(0));
+	const string FILE_NAME = "ccdb.txt";
+	srand((unsigned int) time(0));
 
 	if (argc == 1) {
 		cout << "The following functions are available:" << endl;
@@ -135,9 +161,9 @@ int main(int argc, char** argv) {
 	}
 
 	if (argc == 3) {
-		string flag = strupr(*(argv + 1));
+		string flag = (*(argv + 1));
 		if (flag.compare("CREATE") == 0) {
-			string symbol = strupr(*(argv + 2));
+			string symbol = (*(argv + 2));
 			CreditCard* cc = new CreditCard(symbol);
 			cout << *cc;
 		}
@@ -147,16 +173,19 @@ int main(int argc, char** argv) {
 	}
 
 	if (argc == 4) {
-		string accountNumber = strupr(*(argv + 1));
+		string accountNumber = (*(argv + 1));
 		if (accountNumber.compare("VERIFICATION") == 0) {
-			float amount;
+
+
+			double amount;
+
 			try {
 				amount = atof(*(argv + 2));
 			}
 			catch(...){
 				//TODO - ERROR
 			}
-			CreditCard *cc = new CreditCard(accountNumber, amount);
+			CreditCard *cc = new CreditCard(accountNumber, amount, FILE_NAME);
 		}
 	}
 
