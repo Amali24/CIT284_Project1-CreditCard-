@@ -3,7 +3,7 @@ Developer: Andrew Thomas
 Course: CIT284 - Advanced C++/OOP
 Instructor: A. Richmond
 Assignment: Project 1 - Credit Cards
-Last Updated: 2/6/2018
+Last Updated: 2/8/2018
 
 Change Log:
 			2/3 - Created Project and Main.cpp
@@ -19,6 +19,8 @@ Change Log:
 				- Added and then removed strupr calls for case insensitivity - need a different method for this
 				- Started overloaded extraction operator for reading from file [unfinished]
 				- Fixed off-by-one error in generating card number (card numbers were 17 digits)
+			2/8 - Added error handling
+				- Adjusted overloaded >> operator. Compiles now. [UNTESTED]
 */
 
 #include <iostream>
@@ -56,7 +58,9 @@ public: CreditCard(string symbol) {
 		cardNumber = generateCardNumber(7);
 	}
 	else {
-		// TODO - ERROR
+		cout << "Invalid Symbol" << endl
+			<< "Use AE, V, MC, DIS, or DINE" << endl;
+		return;
 	}
 
 	this->accountNumber = cardNumber;
@@ -118,7 +122,7 @@ public: string getAccountNumber() {
 		
 		return out;
 }
-	friend istream &operator >> (istream &in, const CreditCard& cc) {
+	friend istream &operator >> (istream &in, CreditCard& cc) {
 		string line;
 		while (getline(in, line)) {
 			if (line.find(cc.accountNumber) != string::npos) {
@@ -168,7 +172,7 @@ int main(int argc, char** argv) {
 			cout << *cc;
 		}
 		else {
-			// TODO - ERROR FOR INVALID ARGUMENT
+			cout << "Invalid argument: " << flag << endl;
 		}
 	}
 
@@ -183,7 +187,8 @@ int main(int argc, char** argv) {
 				amount = atof(*(argv + 2));
 			}
 			catch(...){
-				//TODO - ERROR
+				cout << "AMOUNT must be only digits, decimals or a negative sign" << endl
+					<< "EX: \'-29.99\'" << endl;
 			}
 			CreditCard *cc = new CreditCard(accountNumber, amount, FILE_NAME);
 		}
