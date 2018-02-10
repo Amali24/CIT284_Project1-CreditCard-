@@ -3,7 +3,7 @@ Developer: Andrew Thomas
 Course: CIT284 - Advanced C++/OOP
 Instructor: A. Richmond
 Assignment: Project 1 - Credit Cards
-Last Updated: 2/8/2018
+Last Updated: 2/10/2018
 
 Change Log:
 			2/3 - Created Project and Main.cpp
@@ -21,6 +21,7 @@ Change Log:
 				- Fixed off-by-one error in generating card number (card numbers were 17 digits)
 			2/8 - Added error handling
 				- Adjusted overloaded >> operator. Compiles now. [UNTESTED]
+			2/10- Added write to file uponcreation of an account [UNTESTED]
 */
 
 #include <iostream>
@@ -75,6 +76,8 @@ public: CreditCard(string symbol) {
 	}
 
 	availableCredit = maxCredit;
+
+
 	
 
 }
@@ -169,7 +172,16 @@ int main(int argc, char** argv) {
 		if (flag.compare("CREATE") == 0) {
 			string symbol = (*(argv + 2));
 			CreditCard* cc = new CreditCard(symbol);
-			cout << *cc;
+			ofstream outFile;
+			outFile.open(FILE_NAME);
+			if (outFile) {
+				outFile << *cc;
+				cout << "Created account:" << endl << *cc;
+			}
+			else {
+				cout << "File error." << endl;
+				return 1;
+			}
 		}
 		else {
 			cout << "Invalid argument: " << flag << endl;
