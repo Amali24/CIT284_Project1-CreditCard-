@@ -6,22 +6,22 @@ Assignment: Project 1 - Credit Cards
 Last Updated: 2/10/2018
 
 Change Log:
-			2/3 - Created Project and Main.cpp
-				- Created main() skeleton to accept command line arguments
-				- Added Help text to 0 user-provided arguments
-				- Added skeleton of other arg counts wih TODOs
-				- Created CreditCard class with TODOs
-				- Wrote acctNumber generator
-				- Overloaded Stream Insertion Operator [not working]
-			2/6 - Fixed Overloaded stream insert Operator - call was not dereferenced
-				- Started VERIFY flag handling [untested]
-				- Started File Handling [untested]
-				- Added and then removed strupr calls for case insensitivity - need a different method for this
-				- Started overloaded extraction operator for reading from file [unfinished]
-				- Fixed off-by-one error in generating card number (card numbers were 17 digits)
-			2/8 - Added error handling
-				- Adjusted overloaded >> operator. Compiles now. [UNTESTED]
-			2/10- Added write to file uponcreation of an account [UNTESTED]
+			2/3  - Created Project and Main.cpp
+				 - Created main() skeleton to accept command line arguments
+				 - Added Help text to 0 user-provided arguments
+				 - Added skeleton of other arg counts wih TODOs
+				 - Created CreditCard class with TODOs
+				 - Wrote acctNumber generator
+				 - Overloaded Stream Insertion Operator [not working]
+			2/6  - Fixed Overloaded stream insert Operator - call was not dereferenced
+				 - Started VERIFY flag handling [untested]
+				 - Started File Handling [untested]
+				 - Added and then removed strupr calls for case insensitivity - need a different method for this
+				 - Started overloaded extraction operator for reading from file [unfinished]
+				 - Fixed off-by-one error in generating card number (card numbers were 17 digits)
+			2/8  - Added error handling for most common error cases
+				 - Adjusted overloaded >> operator. Compiles now. [UNTESTED]
+			2/10 - Added write to file upon creation of an account [UNTESTED]
 */
 
 #include <iostream>
