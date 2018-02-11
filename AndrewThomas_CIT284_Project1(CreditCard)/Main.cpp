@@ -3,7 +3,7 @@ Developer: Andrew Thomas
 Course: CIT284 - Advanced C++/OOP
 Instructor: A. Richmond
 Assignment: Project 1 - Credit Cards
-Last Updated: 2/10/2018
+Last Updated: 2/11/2018
 
 Change Log:
 			2/3  - Created Project and Main.cpp
@@ -22,6 +22,8 @@ Change Log:
 			2/8  - Added error handling for most common error cases
 				 - Adjusted overloaded >> operator. Compiles now. [UNTESTED]
 			2/10 - Added write to file upon creation of an account [UNTESTED]
+			2/11 - Trying to get this thing working as intended
+				 - Moved String checking on symbol to main() (removed from CC constructor)
 */
 
 #include <iostream>
@@ -40,29 +42,8 @@ private: double maxCredit;
 private: double availableCredit;
 
 
-public: CreditCard(string symbol) {
-	string cardNumber;
-
-	if (symbol.compare("AE") == 0) {
-		cardNumber = generateCardNumber(3);
-	}
-	else if (symbol.compare("V") == 0) {
-		cardNumber = generateCardNumber(4);
-	}
-	else if (symbol.compare("MC") == 0) {
-		cardNumber = generateCardNumber(5);
-	}
-	else if (symbol.compare("DIS") == 0) {
-		cardNumber = generateCardNumber(6);
-	}
-	else if (symbol.compare("DINE") == 0) {
-		cardNumber = generateCardNumber(7);
-	}
-	else {
-		cout << "Invalid Symbol" << endl
-			<< "Use AE, V, MC, DIS, or DINE" << endl;
-		return;
-	}
+public: CreditCard(int firstDigit) {
+	string cardNumber = generateCardNumber(firstDigit);
 
 	this->accountNumber = cardNumber;
 	char checkDigitChar = cardNumber.at(15);
@@ -168,12 +149,38 @@ int main(int argc, char** argv) {
 	}
 
 	if (argc == 3) {
+
 		string flag = (*(argv + 1));
+
 		if (flag.compare("CREATE") == 0) {
 			string symbol = (*(argv + 2));
-			CreditCard* cc = new CreditCard(symbol);
+
+			CreditCard *cc;
+
+			if (symbol.compare("AE") == 0) {
+				cc = new CreditCard(3);
+			}
+			else if (symbol.compare("V") == 0) {
+				cc = new CreditCard(4);
+			}
+			else if (symbol.compare("MC") == 0) {
+				cc = new CreditCard(5);
+			}
+			else if (symbol.compare("DIS") == 0) {
+				cc = new CreditCard(6);
+			}
+			else if (symbol.compare("DINE") == 0) {
+				cc = new CreditCard(7);
+			}
+			else {
+				cout << "Invalid Symbol" << endl
+					<< "Use AE, V, MC, DIS, or DINE" << endl;
+				return;
+			}
+
 			ofstream outFile;
 			outFile.open(FILE_NAME);
+
 			if (outFile) {
 				outFile << *cc;
 				cout << "Created account:" << endl << *cc;
