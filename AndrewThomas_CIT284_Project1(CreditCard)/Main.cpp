@@ -3,7 +3,7 @@ Developer: Andrew Thomas
 Course: CIT284 - Advanced C++/OOP
 Instructor: A. Richmond
 Assignment: Project 1 - Credit Cards
-Last Updated: 2/11/2018
+Last Updated: 2/15/2018
 
 Change Log:
 			2/3  - Created Project and Main.cpp
@@ -27,6 +27,7 @@ Change Log:
 				 - Removed overloaded istream operator. Not necessary.
 				 - Fixed the constructor and file searching. [UNTESTED]
 				 - NEEDS LOTS AND LOTS OF TESTING
+			2/15 - Changed file to open in append mode so we don't delete our database every time we create an account
 */
 
 #include <iostream>
@@ -36,6 +37,7 @@ Change Log:
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 
 using namespace std;
 
@@ -96,6 +98,10 @@ public: void processTransaction(double amount) {
 	}
 	// Otherwise, subtract the amount (this leads to increasing credit for negative transactions (i.e. bill payments)
 	this->availableCredit -= amount;
+	cout << fixed << showpoint << setprecision(2) << "AUTHORIATION GRANTED" 
+		<< (amount > 0 ? " charged " : " credited ") << "account number: " << accountNumber << " $" << amount << endl;
+	cout << "Remaining credit: " << "$" << this->availableCredit;
+	_getch();
 }
 
 		// Generates a credit card number for usage in new accounts
@@ -208,7 +214,7 @@ int main(int argc, char** argv) {
 
 			// Once we have created a CC object, let's open our output file
 			ofstream outFile;
-			outFile.open(FILE_NAME);
+			outFile.open(FILE_NAME, fstream::app);
 
 			// If the file is opened correctly,
 			if (outFile) {
@@ -220,12 +226,14 @@ int main(int argc, char** argv) {
 			else {
 				// Otherwise we show and error and quit the program
 				cout << "File error." << endl;
+				_getch();
 				return 1;
 			}
 		}
 		else {
 			// If the first argument is not CREATE, we error out and quit
 			cout << "Invalid argument: " << flag << endl;
+			_getch();
 			return 1;
 		}
 	}
@@ -259,20 +267,25 @@ int main(int argc, char** argv) {
 				// Tell the user to do better next time
 				cout << "AMOUNT must be only digits, decimals or a negative sign" << endl
 					<< "EX: \'-29.99\'" << endl;
+				_getch();
 			}
 		}
 
 		// If we've made it this far, we nee to open the db file to pull any stored CC info
-		ifstream inFile(FILE_NAME);
+		fstream inFile(FILE_NAME, fstream::app);
 
 		if (!inFile) {
 			// If the file doesn't exist, user likely hasn't created any accounts yet
 			cout << "File not found. Please create an account first." << endl;
+			_getch();
 			return 1;
 		}
 
 		// String object to hold one line at a time from db file. Each CC prints on its own line
 		string line;
+
+		inFile.clear();
+		inFile.seekg(0, ios::beg);
 		// Get one line at a time and store it in line
 		while (getline(inFile, line)) {
 			// Keep going while there are more lines
@@ -291,13 +304,17 @@ int main(int argc, char** argv) {
 				CreditCard cc(accountNumber, availCredit, maxCredit);
 				// Then attempt to process the transaction
 				cc.processTransaction(amount);
+				// Then save the cc
+				inFile << cc;
 				// And exit the program
+				_getch();
 				return 0;
 			}
 		}
 
 		// If the account number isn't found, say so and bail
 		cout << "ACCOUNT NOT ON FILE";
+		_getch();
 		return 1;
 
 	}
@@ -328,4 +345,5 @@ string toUpper(string in) {
 	for (char a : in) {
 		a = toupper(a);
 	}
+	return in;
 }
