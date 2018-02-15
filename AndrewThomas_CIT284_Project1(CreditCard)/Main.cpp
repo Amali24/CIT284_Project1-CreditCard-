@@ -28,6 +28,8 @@ Change Log:
 				 - Fixed the constructor and file searching. [UNTESTED]
 				 - NEEDS LOTS AND LOTS OF TESTING
 			2/15 - Changed file to open in append mode so we don't delete our database every time we create an account
+				 - Working on getting account information to overwrite previous information so we don't end up using
+				   initial infor every single time.
 */
 
 #include <iostream>
@@ -78,7 +80,7 @@ public: CreditCard(int firstDigit) {
 	
 
 }
-public: CreditCard(string accountNumber, double maxCredit, double curCredit) {
+public: CreditCard(string accountNumber, double curCredit, double maxCredit) {
 	
 	// Three argument constructor takes relevant information from command line and from file
 	this->accountNumber = accountNumber;
@@ -101,7 +103,6 @@ public: void processTransaction(double amount) {
 	cout << fixed << showpoint << setprecision(2) << "AUTHORIATION GRANTED" 
 		<< (amount > 0 ? " charged " : " credited ") << "account number: " << accountNumber << " $" << amount << endl;
 	cout << "Remaining credit: " << "$" << this->availableCredit;
-	_getch();
 }
 
 		// Generates a credit card number for usage in new accounts
@@ -271,12 +272,12 @@ int main(int argc, char** argv) {
 			}
 		}
 
-		// If we've made it this far, we nee to open the db file to pull any stored CC info
-		fstream inFile(FILE_NAME, fstream::app);
+		// If we've made it this far, we need to open the db file to pull any stored CC info
+		fstream dbFile(FILE_NAME, fstream::in | fstream::out | fstream::app);
 
-		if (!inFile) {
-			// If the file doesn't exist, user likely hasn't created any accounts yet
-			cout << "File not found. Please create an account first." << endl;
+		if (!dbFile) {
+			// If the file doesn't exist, it should be made. If it can't be, show an error.
+			cout << "Unable to create file." << endl;
 			_getch();
 			return 1;
 		}
@@ -284,15 +285,15 @@ int main(int argc, char** argv) {
 		// String object to hold one line at a time from db file. Each CC prints on its own line
 		string line;
 
-		inFile.clear();
-		inFile.seekg(0, ios::beg);
 		// Get one line at a time and store it in line
-		while (getline(inFile, line)) {
+		while (getline(dbFile, line)) {
+			streampos ccpos;
 			// Keep going while there are more lines
 			if (line.find(accountNumber) != string::npos) {
 				// if accountNumber is found,
 				// Create a stringstream from line
 				istringstream iss(line);
+				
 				// Create doubles for max and current credit
 				double maxCredit;
 				double availCredit;
@@ -305,11 +306,14 @@ int main(int argc, char** argv) {
 				// Then attempt to process the transaction
 				cc.processTransaction(amount);
 				// Then save the cc
-				inFile << cc;
+				dbFile.clear();
+				dbFile.seekg(ccpos);
+				dbFile << cc;
 				// And exit the program
 				_getch();
 				return 0;
 			}
+			ccpos = dbFile.tellg();
 		}
 
 		// If the account number isn't found, say so and bail
