@@ -285,15 +285,20 @@ int main(int argc, char** argv) {
 		// String object to hold one line at a time from db file. Each CC prints on its own line
 		string line;
 
+		streampos ccpos = 0;
+
 		// Get one line at a time and store it in line
-		while (getline(dbFile, line)) {
-			streampos ccpos;
+		while (dbFile) {
+			ccpos = dbFile.tellg();
+
+			getline(dbFile, line);
+
 			// Keep going while there are more lines
 			if (line.find(accountNumber) != string::npos) {
 				// if accountNumber is found,
 				// Create a stringstream from line
 				istringstream iss(line);
-				
+
 				// Create doubles for max and current credit
 				double maxCredit;
 				double availCredit;
@@ -306,16 +311,13 @@ int main(int argc, char** argv) {
 				// Then attempt to process the transaction
 				cc.processTransaction(amount);
 				// Then save the cc
-				dbFile.clear();
-				dbFile.seekg(ccpos);
+				dbFile.seekp(ccpos);
 				dbFile << cc;
 				// And exit the program
 				_getch();
 				return 0;
 			}
-			ccpos = dbFile.tellg();
 		}
-
 		// If the account number isn't found, say so and bail
 		cout << "ACCOUNT NOT ON FILE";
 		_getch();
