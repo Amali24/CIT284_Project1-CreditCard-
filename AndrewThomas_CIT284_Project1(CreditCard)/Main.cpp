@@ -311,8 +311,14 @@ int main(int argc, char** argv) {
 				// Then attempt to process the transaction
 				cc.processTransaction(amount);
 				// Then save the cc
-				dbFile.seekp(ccpos);
-				dbFile << cc;
+				if (!dbFile) {
+					dbFile.clear();
+					dbFile.seekp(0, std::ios_base::beg);
+				}
+				else {
+					dbFile.seekp(ccpos);
+				}
+				dbFile << "new cc:" << endl << cc;
 				// And exit the program
 				_getch();
 				return 0;
