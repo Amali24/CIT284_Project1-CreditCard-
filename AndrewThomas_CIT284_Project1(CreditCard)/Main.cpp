@@ -3,7 +3,8 @@ Developer: Andrew Thomas
 Course: CIT284 - Advanced C++/OOP
 Instructor: A. Richmond
 Assignment: Project 1 - Credit Cards
-Last Updated: 2/15/2018
+Last Updated: 2/16/2018
+Due Date: 2/17/2018
 
 Change Log:
 			2/3  - Created Project and Main.cpp
@@ -29,7 +30,10 @@ Change Log:
 				 - NEEDS LOTS AND LOTS OF TESTING
 			2/15 - Changed file to open in append mode so we don't delete our database every time we create an account
 				 - Working on getting account information to overwrite previous information so we don't end up using
-				   initial infor every single time.
+				   initial info every single time.
+			2/16 - Well, it might not be the prettiest code ever written, but it works. Finally got the file operations
+				   to work. Tweaked the to upper function I wrote, and that seems to work now too. I'm willing to call
+				   this done at this point.
 */
 
 #include <iostream>
@@ -40,6 +44,7 @@ Change Log:
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <vector>
 
 using namespace std;
 
@@ -145,13 +150,15 @@ private: string generateCardNumber(int firstDigit) {
 };
 
 // simple function to convert a string to uppercase to make command line arguments case insensitive
-string toUpper(string);
+string toUpper(string&);
+void printVectorToFile(vector<CreditCard>, fstream&);
 
 int main(int argc, char** argv) {
 	// String constant holds default filename
 	const string FILE_NAME = "ccdb.txt";
 	// Seed random number generator with the current time in milliseconds
 	srand((unsigned int) time(0));
+
 
 	if (argc == 1) {
 		// First argument is the program name, thus 0 user-provided arguments
@@ -176,6 +183,36 @@ int main(int argc, char** argv) {
 
 		// Convert 'flag' (first user-provided argument) to uppercase
 		flag = toUpper(flag);
+
+		// Holds all the cards found in file in memory
+		vector<CreditCard> ccArray;
+
+		// String to hold each line of file
+		string line;
+
+		// Open the file in input mode to read in from our "database"
+		fstream dbFile(FILE_NAME, fstream::in);
+
+		// While input is valid
+		while (getline(dbFile, line)) {
+			// Create a stringstream from each line
+			istringstream iss(line);
+			// Plus variables for the three components of a credit card
+			string accountNumberFromFile;
+			double maxCredit, availCredit;
+			// Read into those variables
+			iss >> accountNumberFromFile >> availCredit >> maxCredit;
+			// Create a credit card object
+			CreditCard cc(accountNumberFromFile, availCredit, maxCredit);
+			// put it in the vector
+			ccArray.push_back(cc);
+		}
+
+		// Clear the file object, reset pointers to 0 and close it
+		dbFile.clear();
+		dbFile.seekp(0);
+		dbFile.seekg(0);
+		dbFile.close();
 
 		if (flag.compare("CREATE") == 0) {
 			// If the flad is CREATE, we can continue
@@ -213,23 +250,18 @@ int main(int argc, char** argv) {
 				return 1;
 			}
 
-			// Once we have created a CC object, let's open our output file
-			ofstream outFile;
-			outFile.open(FILE_NAME, fstream::app);
+			// Put the credit card info into the vector
+			ccArray.push_back(*cc);
 
-			// If the file is opened correctly,
-			if (outFile) {
-				// Put the credit card info into the file
-				outFile << *cc << endl;
-				// And confirm it in the console.
-				cout << "Created account:" << endl << *cc;
-			}
-			else {
-				// Otherwise we show and error and quit the program
-				cout << "File error." << endl;
-				_getch();
-				return 1;
-			}
+			// And confirm it in the console.
+			cout << "Created account:" << endl << *cc;
+
+			// Open the file
+			dbFile.open(FILE_NAME, fstream::out);
+
+			// Write the vector to the file
+			printVectorToFile(ccArray, dbFile);
+
 		}
 		else {
 			// If the first argument is not CREATE, we error out and quit
@@ -273,7 +305,7 @@ int main(int argc, char** argv) {
 		}
 
 		// If we've made it this far, we need to open the db file to pull any stored CC info
-		fstream dbFile(FILE_NAME, fstream::in | fstream::out | fstream::app);
+		fstream dbFile(FILE_NAME, fstream::in | fstream::out);
 
 		if (!dbFile) {
 			// If the file doesn't exist, it should be made. If it can't be, show an error.
@@ -285,49 +317,52 @@ int main(int argc, char** argv) {
 		// String object to hold one line at a time from db file. Each CC prints on its own line
 		string line;
 
-		streampos ccpos = 0;
+		// Will hold the creditcard info from the file (all cards)
+		vector<CreditCard> ccArray;
+		// Flag to denote if account is found
+		bool accountFound = false;
 
-		// Get one line at a time and store it in line
-		while (dbFile) {
-			ccpos = dbFile.tellg();
+		// While there is valid input
+		while (getline(dbFile, line)){
+			// Create a stringstream for each line
+			istringstream iss(line);
+			// And a string for the account number found
+			string accountNumberFromFile;
+			// And doubles for the credit numbers
+			double maxCredit, availCredit;
+			// Then read them all into their variables from the string stream
+			iss >> accountNumberFromFile >> availCredit >> maxCredit;
+			// And create a Credit Card object using those values
+			CreditCard cc(accountNumberFromFile, availCredit, maxCredit);
 
-			getline(dbFile, line);
-
-			// Keep going while there are more lines
-			if (line.find(accountNumber) != string::npos) {
-				// if accountNumber is found,
-				// Create a stringstream from line
-				istringstream iss(line);
-
-				// Create doubles for max and current credit
-				double maxCredit;
-				double availCredit;
-
-				// Numbers are always separated by spaces, so we can do a simple extraction operation
-				// Put the three numbers from the line into our variables
-				iss >> accountNumber >> availCredit >> maxCredit;
-				// Create a CreditCArd object using the three values we have
-				CreditCard cc(accountNumber, availCredit, maxCredit);
-				// Then attempt to process the transaction
+			// If the account number provided matches one found in the file
+			if (accountNumber.compare(accountNumberFromFile) == 0) {
+				// process the transaction and flip the found flag to true
 				cc.processTransaction(amount);
-				// Then save the cc
-				if (!dbFile) {
-					dbFile.clear();
-					dbFile.seekp(0, std::ios_base::beg);
-				}
-				else {
-					dbFile.seekp(ccpos);
-				}
-				dbFile << "new cc:" << endl << cc;
-				// And exit the program
-				_getch();
-				return 0;
+				accountFound = true;
 			}
+
+			// Add the credit card created to the vector
+			ccArray.push_back(cc);
 		}
+		// Clear the file, reset both pointers to 0, and close the file
+		dbFile.clear();
+		dbFile.seekp(0);
+		dbFile.seekg(0);
+		dbFile.close();
+
+		// Re-open the file in out mode (this overwrites the contents
+		dbFile.open(FILE_NAME, fstream::out);
+
+		// Print the vector to the file
+		printVectorToFile(ccArray, dbFile);
+
 		// If the account number isn't found, say so and bail
-		cout << "ACCOUNT NOT ON FILE";
-		_getch();
-		return 1;
+		if (!accountFound) {
+			cout << "ACCOUNT NOT ON FILE";
+			_getch();
+			return 1;
+		}
 
 	}
 
@@ -345,6 +380,7 @@ int main(int argc, char** argv) {
 			<< "\tDINE - Diner's Club" << endl;
 		cout << "VERIFICATION [ACCOUNT NUMBER] [AMOUNT] - attempts to charge or credit ACCOUNT NUMBER for AMOUNT" << endl
 			<< "Use negative numbers to credit to account (i.e. process payments or reunds)" << endl;
+		_getch();
 		return 1;
 	}
 
@@ -352,10 +388,16 @@ int main(int argc, char** argv) {
 	return 0;
 }
 
-string toUpper(string in) {
+string toUpper(string &in) {
 	// Simple. Loop the string, capitalize each letter, store it where the original letter was.
-	for (char a : in) {
-		a = toupper(a);
+	for (int i = 0; i < in.length(); i++) {
+		in[i] = toupper(in[i]);
 	}
 	return in;
+}
+
+void printVectorToFile(vector<CreditCard> arr, fstream &file) {
+	for (CreditCard cc : arr) {
+		file << cc;
+	}
 }
